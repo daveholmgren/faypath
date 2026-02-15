@@ -1,0 +1,348 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String?
+  email         String   @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  role          String   @default("CANDIDATE")
+  billingPlan   String   @default("free")
+  profileSkills String   @default("")
+  profileHeadline String @default("")
+  profileSummary String  @default("")
+  profileCompleteness Int @default(35)
+  lastSignUpIp String?
+  lastSignUpUserAgent String?
+  riskFlags String @default("")
+  isFlagged Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  jobs             Job[]            @relation("JobCreator")
+  applications     Application[]
+  shortlistEntries ShortlistEntry[] @relation("EmployerShortlist")
+  savedSearches    SavedSearch[]
+  jobAlerts        JobAlert[]
+  alertDeliveries  AlertDeliveryLog[]
+  fraudEvents      FraudEvent[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+model Job {
+  id          Int      @id @default(autoincrement())
+  title       String
+  company     String
+  location    String
+  mode        String
+  salary      String
+  meritFit    Int
+  evidence    String
+  tags        String
+  requiredScreeners String @default("")
+  preferredScreeners String @default("")
+  requiredSkills String @default("")
+  preferredSkills String @default("")
+  sponsorTier String @default("none")
+  sponsored Boolean @default(false)
+  featuredEmployer Boolean @default(false)
+  paywallTier String @default("free")
+  marketRegion String @default("US")
+  createdAt   DateTime @default(now())
+  createdById String?
+  createdBy   User?    @relation("JobCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  applications Application[]
+  alerts       JobAlert[]
+  externalRecords ExternalJobRecord[]
+}
+
+model ExternalJobRecord {
+  id          Int      @id @default(autoincrement())
+  source      String
+  externalId  String
+  fingerprint String
+  sourceUrl   String?
+  rawPayload  String
+  importedAt  DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+  jobId       Int
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([source, externalId])
+  @@index([source, importedAt])
+  @@index([jobId])
+}
+
+model TalentProfile {
+  id               Int      @id @default(autoincrement())
+  name             String
+  role             String
+  summary          String
+  merit            Int
+  assessment       String
+  trust            String
+  createdAt        DateTime @default(now())
+  shortlistEntries ShortlistEntry[]
+}
+
+model Application {
+  id        Int      @id @default(autoincrement())
+  jobId     Int
+  userId    String
+  status    String   @default("Applied")
+  appliedAt DateTime @default(now())
+  screenerRequiredPassed Boolean @default(true)
+  screenerRequiredScore Int @default(0)
+  screenerPreferredScore Int @default(0)
+  autoRankScore Int @default(0)
+  matchExplanation String @default("")
+  missingSkills String @default("")
+  profileFixSuggestions String @default("")
+  submittedAnswers String @default("")
+  riskScore Int @default(0)
+  riskFlags String @default("")
+  needsManualReview Boolean @default(false)
+  sourceIp String?
+  userAgent String?
+
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, userId])
+}
+
+model SavedSearch {
+  id           Int      @id @default(autoincrement())
+  userId       String
+  label        String
+  keyword      String
+  mode         String   @default("all")
+  minScore     Int      @default(70)
+  emailEnabled Boolean  @default(true)
+  inAppEnabled Boolean  @default(true)
+  pushEnabled  Boolean  @default(false)
+  pushDeferred Boolean  @default(true)
+  timezone     String   @default("America/New_York")
+  digestCadence String   @default("daily")
+  digestHour    Int      @default(9)
+  lastDigestAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alerts       JobAlert[]
+  deliveryLogs AlertDeliveryLog[]
+
+  @@index([userId, createdAt])
+}
+
+model JobAlert {
+  id            Int       @id @default(autoincrement())
+  userId        String
+  savedSearchId Int
+  jobId         Int
+  reason        String
+  createdAt     DateTime  @default(now())
+  readAt        DateTime?
+  emailSentAt   DateTime?
+  inAppSentAt   DateTime?
+  pushSentAt    DateTime?
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  savedSearch SavedSearch @relation(fields: [savedSearchId], references: [id], onDelete: Cascade)
+  job         Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  deliveries  AlertDeliveryLog[]
+
+  @@unique([userId, savedSearchId, jobId])
+  @@index([userId, createdAt])
+}
+
+model AlertDeliveryLog {
+  id            Int      @id @default(autoincrement())
+  userId        String
+  alertId       Int?
+  savedSearchId Int?
+  channel       String   @default("email")
+  kind          String   @default("instant")
+  provider      String   @default("log")
+  providerMessageId String?
+  accepted      Boolean  @default(true)
+  recipient     String
+  subject       String
+  payload       String
+  deliveredAt   DateTime @default(now())
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alert       JobAlert?    @relation(fields: [alertId], references: [id], onDelete: SetNull)
+  savedSearch SavedSearch? @relation(fields: [savedSearchId], references: [id], onDelete: SetNull)
+
+  @@index([userId, deliveredAt])
+}
+
+model WebhookEvent {
+  id             Int      @id @default(autoincrement())
+  direction      String   @default("inbound")
+  source         String
+  eventType      String
+  signature      String?
+  signatureValid Boolean?
+  deliveryUrl    String?
+  httpStatus     Int?
+  status         String   @default("received")
+  abuseScore     Int      @default(0)
+  blocked        Boolean  @default(false)
+  note           String?
+  payload        String
+  receivedAt     DateTime @default(now())
+  processedAt    DateTime?
+}
+
+model Conversation {
+  id        Int                    @id @default(autoincrement())
+  title     String
+  createdAt DateTime               @default(now())
+  messages  Message[]
+  presence  ConversationPresence[]
+}
+
+model Message {
+  id             Int      @id @default(autoincrement())
+  conversationId Int
+  role           String
+  text           String
+  sentAt         DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model ConversationPresence {
+  id             Int      @id @default(autoincrement())
+  conversationId Int
+  role           String
+  typingUntil    DateTime?
+  lastSeenAt     DateTime?
+  updatedAt      DateTime @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, role])
+}
+
+model Interview {
+  id        Int      @id @default(autoincrement())
+  person    String
+  owner     String
+  time      DateTime
+  type      String
+  createdAt DateTime @default(now())
+}
+
+model ModerationItem {
+  id        Int      @id @default(autoincrement())
+  type      String
+  target    String
+  reason    String
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+}
+
+model ShortlistEntry {
+  id         Int      @id @default(autoincrement())
+  employerId String
+  profileId  Int
+  createdAt  DateTime @default(now())
+
+  employer User          @relation("EmployerShortlist", fields: [employerId], references: [id], onDelete: Cascade)
+  profile  TalentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([employerId, profileId])
+}
+
+model FraudEvent {
+  id        Int      @id @default(autoincrement())
+  flow      String
+  userId    String?
+  sourceIp  String?
+  severity  String   @default("low")
+  decision  String   @default("allow")
+  detail    String
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([flow, createdAt])
+  @@index([userId, createdAt])
+}
+
+model SecurityBacklogItem {
+  id        Int      @id @default(autoincrement())
+  area      String
+  title     String
+  status    String   @default("planned")
+  severity  String   @default("medium")
+  owner     String?
+  notes     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ApiInventoryItem {
+  id               Int      @id @default(autoincrement())
+  method           String
+  path             String
+  authRequired     Boolean  @default(true)
+  objectLevelCheck Boolean  @default(false)
+  thirdPartyRisk   String   @default("low")
+  notes            String   @default("")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([method, path])
+}

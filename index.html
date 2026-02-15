@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Faypath | Merit-First Employment Network</title>
+    <meta
+      name="description"
+      content="Faypath is a merit-based hiring network blending job discovery and professional reputation."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="bg-shape bg-shape-1" aria-hidden="true"></div>
+    <div class="bg-shape bg-shape-2" aria-hidden="true"></div>
+    <div class="bg-shape bg-shape-3" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Faypath home">
+        <span class="brand-dot"></span>
+        Faypath
+      </a>
+      <nav class="topnav" aria-label="Primary">
+        <a href="#discover">Discover</a>
+        <a href="#workspace">Workspace</a>
+        <a href="#messages">Messages</a>
+        <a href="#moderation">Moderation</a>
+      </nav>
+      <div class="auth-pill">
+        <span>Mixed auth</span>
+        <button type="button" class="ghost-btn compact-btn">Email</button>
+        <button type="button" class="ghost-btn compact-btn">Google</button>
+        <button type="button" class="ghost-btn compact-btn">LinkedIn</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" id="discover">
+        <p class="eyebrow">US-only launch | Merit-based hiring</p>
+        <h1>A hiring network built on verified outcomes.</h1>
+        <p class="lead">
+          This prototype combines Indeed-style job discovery with LinkedIn-style professional
+          reputation, then ranks matches by measurable ability and proof of work.
+        </p>
+
+        <div class="role-switch" role="tablist" aria-label="Role mode">
+          <button
+            type="button"
+            id="candidate-mode"
+            class="switch-btn active"
+            aria-selected="true"
+            data-role="candidate"
+          >
+            Candidate View
+          </button>
+          <button
+            type="button"
+            id="employer-mode"
+            class="switch-btn"
+            aria-selected="false"
+            data-role="employer"
+          >
+            Employer View
+          </button>
+        </div>
+
+        <form class="search-shell" id="search-form">
+          <label class="field">
+            <span>Role or skill</span>
+            <input
+              id="keyword"
+              type="text"
+              placeholder="Product Designer, React, Operations..."
+              autocomplete="off"
+            />
+          </label>
+          <label class="field">
+            <span>Work mode</span>
+            <select id="mode">
+              <option value="all">All modes</option>
+              <option value="remote">Remote</option>
+              <option value="hybrid">Hybrid</option>
+              <option value="onsite">On-site</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Minimum merit score</span>
+            <input id="score" type="range" min="55" max="95" value="72" />
+            <output id="score-out" for="score">72</output>
+          </label>
+          <button type="submit" class="primary-btn">Find Matches</button>
+        </form>
+      </section>
+
+      <section class="signal-grid">
+        <article class="signal-card">
+          <h2>Default Merit Formula</h2>
+          <p>40% work outcomes + 35% assessments + 25% trust signals.</p>
+        </article>
+        <article class="signal-card">
+          <h2>Evidence Sources</h2>
+          <p>Portfolio results, challenge tasks, references, and certs.</p>
+        </article>
+        <article class="signal-card">
+          <h2>Role Coverage</h2>
+          <p>Candidate + employer dashboards with shared messaging.</p>
+        </article>
+      </section>
+
+      <section class="board panel" id="jobs" data-role-view="both">
+        <div class="panel-head">
+          <h2>Open Roles</h2>
+          <p><span id="result-count">0</span> roles ranked by merit fit</p>
+        </div>
+        <div id="job-list" class="job-list" aria-live="polite"></div>
+      </section>
+
+      <section class="talent panel" id="talent" data-role-view="both">
+        <div class="panel-head">
+          <h2>Top Talent</h2>
+          <p>Shortlist-ready candidates with verified outcomes.</p>
+        </div>
+        <div id="talent-grid" class="talent-grid"></div>
+      </section>
+
+      <section class="panel" id="workspace">
+        <div class="panel-head">
+          <h2>Workspace</h2>
+          <p>Role-aware workflows for hiring and applications.</p>
+        </div>
+
+        <div class="workspace-grid">
+          <article class="workspace-card" data-role-view="candidate">
+            <h3>Your Applications</h3>
+            <p class="card-sub">Track status and interview progress.</p>
+            <div id="application-list" class="stack-list"></div>
+          </article>
+
+          <article class="workspace-card" data-role-view="employer">
+            <h3>Post a Job</h3>
+            <p class="card-sub">Create US-based roles and set merit minimums.</p>
+            <form id="post-job-form" class="post-form">
+              <input id="post-title" type="text" placeholder="Job title" required />
+              <input id="post-company" type="text" placeholder="Company" required />
+              <input id="post-location" type="text" placeholder="Location (US city/state)" required />
+              <div class="inline-fields">
+                <select id="post-mode" required>
+                  <option value="remote">Remote</option>
+                  <option value="hybrid">Hybrid</option>
+                  <option value="onsite">On-site</option>
+                </select>
+                <input id="post-salary" type="text" placeholder="Salary range" required />
+              </div>
+              <input id="post-tags" type="text" placeholder="Tags (comma separated)" required />
+              <input id="post-score" type="number" min="55" max="99" value="75" required />
+              <button type="submit" class="primary-btn wide-btn">Publish Job</button>
+            </form>
+          </article>
+
+          <article class="workspace-card" data-role-view="employer">
+            <h3>Candidate Shortlist</h3>
+            <p class="card-sub">Prioritized by merit score and role fit.</p>
+            <div id="shortlist-list" class="stack-list"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel messaging" id="messages" data-role-view="both">
+        <div class="panel-head">
+          <h2>Messaging</h2>
+          <p>Candidate and employer conversations in one inbox.</p>
+        </div>
+        <div class="messages-shell">
+          <aside>
+            <h3>Conversations</h3>
+            <div id="conversation-list" class="conversation-list"></div>
+          </aside>
+          <div class="thread">
+            <h3 id="thread-title">Thread</h3>
+            <div id="thread-log" class="thread-log"></div>
+            <form id="message-form" class="message-form">
+              <input id="message-input" type="text" placeholder="Type message..." required />
+              <button type="submit" class="primary-btn">Send</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel scheduler" id="scheduler" data-role-view="both">
+        <div class="panel-head">
+          <h2>Interview Scheduling</h2>
+          <p>Create and manage upcoming interviews.</p>
+        </div>
+        <form id="interview-form" class="interview-form">
+          <input id="interview-person" type="text" placeholder="Candidate name" required />
+          <input id="interview-owner" type="text" placeholder="Interviewer / hiring manager" required />
+          <input id="interview-time" type="datetime-local" required />
+          <select id="interview-type" required>
+            <option value="video">Video</option>
+            <option value="onsite">On-site</option>
+            <option value="phone">Phone</option>
+          </select>
+          <button type="submit" class="primary-btn">Schedule</button>
+        </form>
+        <div id="interview-list" class="stack-list"></div>
+      </section>
+
+      <section class="panel moderation" id="moderation" data-role-view="employer">
+        <div class="panel-head">
+          <h2>Admin Moderation Queue</h2>
+          <p>Review profile and posting flags before publishing.</p>
+        </div>
+        <div id="moderation-list" class="stack-list"></div>
+      </section>
+
+      <section class="scoring panel" id="scoring" data-role-view="both">
+        <h2>How Merit Score Works</h2>
+        <p class="lead">
+          Merit score means your weighted performance score. Current default: 40% work evidence,
+          35% assessment outcomes, 25% trust signals.
+        </p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Faypath product prototype</p>
+      <button class="primary-btn">Request Early Access</button>
+    </footer>
+  </body>
+</html>
